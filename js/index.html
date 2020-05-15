@@ -7,32 +7,38 @@
     /* The width is the width of the web page */
   }
 </style>
-<input type="file" id="fileUpload" multiple/>
+<input type="file" id="fileUpload" multiple />
 <input type="button" id="upload" value="Upload" onclick="Upload()" onselect="ength()" />
 <input type="button" value="find" id="find">
 <hr />
 <div id="map"></div>
-<script
-type="text/javascript"
-src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"
-></script>
-<script
-type="text/javascript"
-src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
-></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"></script>
 <script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>
 
 <script type="text/javascript">
 
-// initialising array which will store all results
+  // initialising array which will store all results
   var result = [];
+
+  // This function gets the total count of instances of a postcode. Can be used for multiple uploads
+  var eventify = function (arr, callback) {
+      arr.push = function (e) {
+        Array.prototype.push.call(arr, e);
+        callback(arr);
+      };
+    };
+// this fuction will be used later when we add markers/heatmaps to the map
+    eventify(result, function (updatedArr) {
+      return updatedArr.length;
+    });
 
   function Upload() {
     //Reference the FileUpload element.
     var fileUpload = document.getElementById("fileUpload");
-    
 
-// If it is an excel file, run the process excel function inside Upload()
+
+    // If it is an excel file, run the process excel function inside Upload()
     var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xls|.xlsx)$/;
     if (regex.test(fileUpload.value.toLowerCase())) {
       if (typeof FileReader != "undefined") {
@@ -65,20 +71,20 @@ src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
 
           if (match != null) {
             match = regex.exec(line);
-// pushes result to result array
+            // pushes result to result array
             result.push(match[0]);
             // ength(match);
           }
           return current;
-            console.log(result);
-            
+          console.log(result);
+
         });
       };
       reader.readAsText(fileUpload.files[0]);
       // return result;
     }
-}
-  
+  }
+
   console.log(result);
 
   function ProcessExcel(data) {
@@ -98,7 +104,7 @@ src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
 
     //Add the data rows from Excel file.
 
-// TODO clean this up
+    // TODO clean this up
     for (var i = 0; i < excelRows.length; i++) {
       var cell = excelRows[i];
       // console.log(cell);
@@ -111,10 +117,10 @@ src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
       } else if (cell["Post code"]) {
         var postcodes = [cell["Post code"]];
       }
-      
+
       var regex = /^[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}$/i;
       if (regex.test(postcodes)) {
-// validates postcodes and pushes to array
+        // validates postcodes and pushes to array
         result.push(postcodes.toString());
       } else {
         postcodes.pop(postcodes[i]);
@@ -125,71 +131,40 @@ src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
   var button = document.getElementById("find");
   var leng;
 
-// trying to get around changing the default length of the array, which is 0
-  var onButtonClick = function() {
-    var leng = result.length;
-    return leng;
-  }
-  button.addEventListener("click", onButtonClick);
-
-// incomplete but initialises map and puts markers on
-// TODO make the markers work with geocoder & heatmap visualisations
+  // incomplete but initialises map and puts markers on
+  // TODO make the markers work with geocoder & heatmap visualisations
   async function initMap() {
-    
-    console.log(result.length);
 
-    var heatmapData = [
-      new google.maps.Geocoder("TW110AN"),
-      new google.maps.LatLng(37.782, -122.445),
-      new google.maps.LatLng(37.782, -122.443),
-      new google.maps.LatLng(37.782, -122.441),
-      new google.maps.LatLng(37.782, -122.439),
-      new google.maps.LatLng(37.782, -122.437),
-      new google.maps.LatLng(37.782, -122.435),
-      new google.maps.LatLng(37.785, -122.447),
-      new google.maps.LatLng(37.785, -122.445),
-      new google.maps.LatLng(37.785, -122.443),
-      new google.maps.LatLng(37.785, -122.441),
-      new google.maps.LatLng(37.785, -122.439),
-      new google.maps.LatLng(37.785, -122.437),
-      new google.maps.LatLng(37.785, -122.435)
-    ];
-  
-    
-    
-    
-      // The location of Uluru
-      var geocoder = new google.maps.Geocoder();
-
-
-      geocoder.geocode({ address: "TW110AN", address: "TW121AW"}, function (results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-        console.log(results[0]);
-          console.log(results[1]);
-        for (i = 0; i < results.length; i++) {
-          var marker = new google.maps.Marker({
-            position: results[i].geometry.location,
+    // this took some tinkering but it can finally add markers to the map dynamically after the page has loaded
+    // updatedArray stores the data, accessed later with the iterator
+    // then it is just travelling down JSON. first by accessing results, then geometry and location of the google api json call
+    eventify(result, function(updatedArr){
+      
+      for (var i = 0; i < updatedArr.length; i++) {
+        $.post('https://maps.googleapis.com/maps/api/geocode/json?address=' + updatedArr[i] + '&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno', null, function (data) {
+          console.log(data);
+          var p = data.results[0].geometry.location;
+          new google.maps.Marker({
+            position: p,
             map: map
           });
-      };
-      } else {
-        console.log("numberwang");
-      }});
-      var london = { lat: 51.5074, lng: -0.2 };
-      // The map, centered at Uluru
-      var heat =  [new geocoder.geocode({"address": "TW110AN", "address": "TW139AM"})];
-      var map = new google.maps.Map(
-        document.getElementById('map'), { zoom: 8, center: london });
-      // The marker, positioned at Uluru
-      var marker = new google.maps.Marker({ position: london, map: map });
-    //   var heatmap = new google.maps.visualization.HeatmapLayer({
-    //   data: heat
-    // });
-    // heatmap.setMap(map);
-    
+
+        });
+      }
+    });
+    // initialising and giving options to the map
+    var map;
+
+    var myOptions = {
+      zoom: 9,
+      center: new google.maps.LatLng(51.509865, -0.118092),
+      mapTypeId: 'terrain'
+    };
+    map = new google.maps.Map($('#map')[0], myOptions);
 
   }
-  
+
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization&callback=initMap">
-</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno&libraries=visualization&callback=initMap">
+  </script>
