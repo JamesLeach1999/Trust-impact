@@ -1,0 +1,195 @@
+<style>
+  /* Set the size of the div element that contains the map */
+  #map {
+    height: 400px;
+    /* The height is 400 pixels */
+    width: 100%;
+    /* The width is the width of the web page */
+  }
+</style>
+<input type="file" id="fileUpload" multiple/>
+<input type="button" id="upload" value="Upload" onclick="Upload()" onselect="ength()" />
+<input type="button" value="find" id="find">
+<hr />
+<div id="map"></div>
+<script
+type="text/javascript"
+src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"
+></script>
+<script
+type="text/javascript"
+src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"
+></script>
+<script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>
+
+<script type="text/javascript">
+
+// initialising array which will store all results
+  var result = [];
+
+  function Upload() {
+    //Reference the FileUpload element.
+    var fileUpload = document.getElementById("fileUpload");
+    
+
+// If it is an excel file, run the process excel function inside Upload()
+    var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xls|.xlsx)$/;
+    if (regex.test(fileUpload.value.toLowerCase())) {
+      if (typeof FileReader != "undefined") {
+        var reader = new FileReader();
+
+        //For Browsers other than IE.
+        if (reader.readAsBinaryString) {
+          reader.onload = function (e) {
+            ProcessExcel(e.target.result);
+          };
+          reader.readAsBinaryString(fileUpload.files[0]);
+
+          // reader.readAsArrayBuffer(fileUpload.files[0]);
+        }
+      } else {
+        alert("This browser does not support HTML5.");
+      }
+    } else {
+      // if not then process the files as regular csv or txt files
+      var results = []
+      const reader = new FileReader();
+      reader.onload = function () {
+        // split the lines at new line breaks for txt, pass it into the function the map to current
+        const lines = reader.result.split("\n").map(function (line) {
+          // further split the file by comma
+          var current = line.split(",");
+          // check if the postcode is valid
+          var regex = /[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}/i;
+          var match = regex.exec(current);
+
+          if (match != null) {
+            match = regex.exec(line);
+// pushes result to result array
+            result.push(match[0]);
+            // ength(match);
+          }
+          return current;
+            console.log(result);
+            
+        });
+      };
+      reader.readAsText(fileUpload.files[0]);
+      // return result;
+    }
+}
+  
+  console.log(result);
+
+  function ProcessExcel(data) {
+    //Read the Excel File data.
+    var workbook = XLSX.read(data, {
+      type: "binary",
+    });
+
+    //Fetch the name of First Sheet.
+    var firstSheet = workbook.SheetNames[0];
+
+    //Read all rows from First Sheet into an JSON array.
+
+    var excelRows = XLSX.utils.sheet_to_row_object_array(
+      workbook.Sheets[firstSheet]
+    );
+
+    //Add the data rows from Excel file.
+
+// TODO clean this up
+    for (var i = 0; i < excelRows.length; i++) {
+      var cell = excelRows[i];
+      // console.log(cell);
+      if (cell.postcode) {
+        var postcodes = [cell.postcode];
+      } else if (cell.Postcode) {
+        var postcodes = [cell.Postcode];
+      } else if (cell["post code"]) {
+        var postcodes = [cell["post code"]];
+      } else if (cell["Post code"]) {
+        var postcodes = [cell["Post code"]];
+      }
+      
+      var regex = /^[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}$/i;
+      if (regex.test(postcodes)) {
+// validates postcodes and pushes to array
+        result.push(postcodes.toString());
+      } else {
+        postcodes.pop(postcodes[i]);
+      }
+    }
+  }
+
+  var button = document.getElementById("find");
+  var leng;
+
+// trying to get around changing the default length of the array, which is 0
+  var onButtonClick = function() {
+    var leng = result.length;
+    return leng;
+  }
+  button.addEventListener("click", onButtonClick);
+
+// incomplete but initialises map and puts markers on
+// TODO make the markers work with geocoder & heatmap visualisations
+  async function initMap() {
+    
+    console.log(result.length);
+
+    var heatmapData = [
+      new google.maps.Geocoder("TW110AN"),
+      new google.maps.LatLng(37.782, -122.445),
+      new google.maps.LatLng(37.782, -122.443),
+      new google.maps.LatLng(37.782, -122.441),
+      new google.maps.LatLng(37.782, -122.439),
+      new google.maps.LatLng(37.782, -122.437),
+      new google.maps.LatLng(37.782, -122.435),
+      new google.maps.LatLng(37.785, -122.447),
+      new google.maps.LatLng(37.785, -122.445),
+      new google.maps.LatLng(37.785, -122.443),
+      new google.maps.LatLng(37.785, -122.441),
+      new google.maps.LatLng(37.785, -122.439),
+      new google.maps.LatLng(37.785, -122.437),
+      new google.maps.LatLng(37.785, -122.435)
+    ];
+  
+    
+    
+    
+      // The location of Uluru
+      var geocoder = new google.maps.Geocoder();
+
+
+      geocoder.geocode({ address: "TW110AN", address: "TW121AW"}, function (results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        console.log(results[0]);
+          console.log(results[1]);
+        for (i = 0; i < results.length; i++) {
+          var marker = new google.maps.Marker({
+            position: results[i].geometry.location,
+            map: map
+          });
+      };
+      } else {
+        console.log("numberwang");
+      }});
+      var london = { lat: 51.5074, lng: -0.2 };
+      // The map, centered at Uluru
+      var heat =  [new geocoder.geocode({"address": "TW110AN", "address": "TW139AM"})];
+      var map = new google.maps.Map(
+        document.getElementById('map'), { zoom: 8, center: london });
+      // The marker, positioned at Uluru
+      var marker = new google.maps.Marker({ position: london, map: map });
+    //   var heatmap = new google.maps.visualization.HeatmapLayer({
+    //   data: heat
+    // });
+    // heatmap.setMap(map);
+    
+
+  }
+  
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno&libraries=visualization&callback=initMap">
+</script>
