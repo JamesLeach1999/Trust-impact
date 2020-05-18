@@ -23,15 +23,15 @@
 
   // This function gets the total count of instances of a postcode. Can be used for multiple uploads
   var eventify = function (arr, callback) {
-      arr.push = function (e) {
-        Array.prototype.push.call(arr, e);
-        callback(arr);
-      };
+    arr.push = function (e) {
+      Array.prototype.push.call(arr, e);
+      callback(arr);
     };
-// this fuction will be used later when we add markers/heatmaps to the map
-    eventify(result, function (updatedArr) {
-      return updatedArr.length;
-    });
+  };
+  // this fuction will be used later when we add markers/heatmaps to the map
+  eventify(result, function (updatedArr) {
+    return updatedArr.length;
+  });
 
   function Upload() {
     //Reference the FileUpload element.
@@ -131,6 +131,7 @@
   var button = document.getElementById("find");
   var leng;
 
+  
   // incomplete but initialises map and puts markers on
   // TODO make the markers work with geocoder & heatmap visualisations
   async function initMap() {
@@ -138,31 +139,50 @@
     // this took some tinkering but it can finally add markers to the map dynamically after the page has loaded
     // updatedArray stores the data, accessed later with the iterator
     // then it is just travelling down JSON. first by accessing results, then geometry and location of the google api json call
-    eventify(result, function(updatedArr){
-      
+    var heatMapData = [];
+    var wei = Math.floor(Math.random() * 4);
+
+    eventify(result, function (updatedArr) {
+
       for (var i = 0; i < updatedArr.length; i++) {
-        $.post('https://maps.googleapis.com/maps/api/geocode/json?address=' + updatedArr[i] + '&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno', null, function (data) {
-          console.log(data);
+        $.get('https://maps.googleapis.com/maps/api/geocode/json?address=' + updatedArr[i] + '&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno', null, function (data) {
+          // console.log(data);
           var p = data.results[0].geometry.location;
+          var heatMapData = [
+            {location: new google.maps.LatLng(p), weight: wei},
+          ];
+
+          var heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heatMapData
+          });
+
+          heatmap.setMap(map);
+
           new google.maps.Marker({
             position: p,
             map: map
-          });
-
         });
-      }
-    });
-    // initialising and giving options to the map
-    var map;
-
-    var myOptions = {
-      zoom: 9,
-      center: new google.maps.LatLng(51.509865, -0.118092),
-      mapTypeId: 'terrain'
+      });
     };
-    map = new google.maps.Map($('#map')[0], myOptions);
+  });
 
-  }
+  var map;
+  
+  // initialising and giving options to the map
+  var myOptions = {
+    zoom: 9,
+    center: new google.maps.LatLng(51.509865, -0.118092),
+    mapTypeId: 'terrain'
+  };
+  map = new google.maps.Map($('#map')[0], myOptions);
+    var heatmap = new google.maps.visualization.HeatmapLayer({
+      data: heatMapData
+    });
+    heatmap.setMap(map);
+  
+
+  
+}
 
 </script>
 <script async defer
