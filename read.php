@@ -3,7 +3,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-type: application/json");
 
-include_once "../../../../PHPprocessing/simplexlsx-master/simplexlsx-master/src/SimpleXLSX.php";
+include_once "../../../SimpleXLSX.php";
 include_once "../../config/Database.php";
 include_once "../../models/post.php";
 
