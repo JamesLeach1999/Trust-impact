@@ -23,15 +23,17 @@ class Post {
         $this->conn = $db;
         
     }
-    var $postie = [];
+
+    // parameter to store the postcodes in an array
+    var $postie;
     
     public function read($postie){
-        foreach($postie as $i){
-            $res = $i;
-        }
+        
+        // sanitize, remove whitespace and convert to all caps
+        $postie = strtoupper(htmlspecialchars(str_replace(" ","",$postie)));
+        
         // create query
-        $query = "SELECT * FROM trust WHERE trust.postcode IN ('" . $postie . "')";
-        var_dump($res);
+        $query = "SELECT * FROM trust WHERE trust.postcode IN (" . $postie . ")";
 
         // prepared statement
         $stmt = $this->conn->prepare($query);

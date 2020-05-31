@@ -72,7 +72,7 @@
               $.get('https://maps.googleapis.com/maps/api/geocode/json?address=' + name + '&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno', null, function (data) {
           console.log(id);
                 var p = data.results[0].geometry.location;
-                var imd = 32844 - id;
+                var imd = (32844 - id) * 1000;
                 var heatMapData = [
             {location: new google.maps.LatLng(p), weight: imd},
           ];
