@@ -1,0 +1,131 @@
+<!DOCTYPE html >
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>Using MySQL and PHP with Google Maps</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>
+
+
+<html>
+  <body>
+    <div id="map"></div>
+
+    <script>
+      var customLabel = {
+        restaurant: {
+          label: 'R'
+        },
+        bar: {
+          label: 'B'
+        }
+      };
+
+        function initMap() {
+          var geocoder = new google.maps.Geocoder();
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: new google.maps.LatLng(51.509865
+, -0.118092
+),
+          zoom: 10
+        });
+        var infoWindow = new google.maps.InfoWindow;
+
+          // Change this depending on the name of your PHP or XML file
+          downloadUrl('http://localhost/trust impact/php/private/api/post/results.json', function(data) {
+            // var markers = [];
+    
+            var result = JSON.parse(data.responseText);
+            console.log(result.data);
+            // var markers = result.documentElement.getElementsByTagName('marker');
+            Array.prototype.forEach.call(result.data, function(markerElem) {
+              var id = markerElem.imd;
+              var name = markerElem.postcode;
+              // var address = markerElem.getAttribute('address');
+              // var type = markerElem.getAttribute('type');
+              var point = new google.maps.LatLng(51.509865, -0.118092);
+                  
+
+              var infowincontent = document.createElement('div');
+              var strong = document.createElement('strong');
+              strong.textContent = id
+              infowincontent.appendChild(strong);
+              infowincontent.appendChild(document.createElement('br'));
+
+              var text = document.createElement('text');
+              text.textContent = name;
+              infowincontent.appendChild(text);
+
+              $.get('https://maps.googleapis.com/maps/api/geocode/json?address=' + name + '&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno', null, function (data) {
+          console.log(id);
+                var p = data.results[0].geometry.location;
+                var imd = (32844 - id) * 1000;
+                var heatMapData = [
+            {location: new google.maps.LatLng(p), weight: imd},
+          ];
+
+          var heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heatMapData
+          });
+
+          heatmap.setMap(map);
+                var marker = new google.maps.Marker({
+                  position: p,
+                  map: map
+                });
+                marker.addListener('click', function() {
+                  infoWindow.setContent(infowincontent);
+                  infoWindow.open(map, marker);
+                });
+              });
+
+            }
+            );
+          });
+        }
+
+
+        
+
+      async function downloadUrl(url, callback) {
+        await(url);
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+          if (request.readyState == 4) {
+            var myArr = JSON.parse(this.responseText);
+
+            request.onreadystatechange = doNothing;
+            callback(request, request.status);
+            return myArr;
+          }
+        };
+        request.open('GET', url, true);
+        request.setRequestHeader("Content-type", "application/json");
+        request.send();
+        // console.log(request);
+
+      }
+
+      function doNothing() {}
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno&libraries=visualization&callback=initMap">
+    </script>
+  </body>
+</html>
