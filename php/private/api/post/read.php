@@ -6,18 +6,22 @@ header("Content-type: application/json");
 include_once "../../../SimpleXLSX.php";
 include_once "../../config/Database.php";
 include_once "../../models/post.php";
-
+include_once "../../../reader.php";
+// initialize results array
+// retrieve file from index.php, also get the filename so the extension can be aquired later
 $results = [];
 $file = $_FILES['postcode']['tmp_name'];
 $filename = $_FILES['postcode']['name'];
 
 $row = 1;
-
+// the file extension
 $fileinfo = pathinfo($filename, PATHINFO_EXTENSION);
-var_dump($_FILES);
+// var_dump($_FILES);
+
+// if statements to process the file differently depending on its type
 
 if($fileinfo == "xlsx"){
-$allowed = array("Post code", "postcode", "POSTCODE", "Post Code", "PostCode", "Postcode");
+$allowed = array("Post code", "postcode", "POSTCODE", "Post Code", "PostCode", "Postcode", "");
 
 if ( $xlsx = SimpleXLSX::parse($file) ) {
     // Produce array keys from the array values of 1st array element
@@ -30,22 +34,64 @@ if ( $xlsx = SimpleXLSX::parse($file) ) {
         
         // get the individual header titles and compare to array of postcodes to see if theres a match
         for($i = 0; $i < count($header_values); $i++){
+            array_map("trim", $header_values);
+
             if(in_array($header_values[$i], $allowed)){
-                
+                $r = implode(",", $r);
+
+                // push the results to the results array
                 array_push($results, $r[$i]);
-            }
-            
+            } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[0])){
+                $res = implode(",", $r);
+                // push the results to the results array
+                array_push($results, $res);
+            } else {
+		    continue
+	    }
         }
-        // var_dump($header_values[$k]);
 	}
 }
+} else if ($fileinfo == "xls"){
+    $allowed = array("Post code", "postcode", "POSTCODE", "Post Code", "PostCode", "Postcode");
+
+    if ( $xls = SimpleXLS::parse($file) ) {
+
+    // Produce array keys from the array values of 1st array element
+    $header_values = $rows = [];
+	foreach ( $xls->rows() as $k => $r ) {
+        if ( $k === 0 ) {
+            $header_values = $r;
+			continue;
+        }
+        // get the individual header titles and compare to array of postcodes to see if theres a match
+        for($i = 0; $i < count($header_values); $i++){
+            // remove whitespace
+            array_map("trim", $header_values);
+            if(in_array($header_values[$i], $allowed)){
+                $r = implode(",", $r);
+                // push the results to the results array
+                array_push($results, $r);
+                // use regex to make sure the postcode is valid
+            } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[0])){
+                $res = implode(",", $r);
+                array_push($results, $res);
+            } else {
+		    continue;
+	    }
+        }
+        
+    }
+    
+}
+
+// csv processing, fairly straight forward
 } else if ($fileinfo == "csv"){
     if (($handle = fopen($file, "r")) !== FALSE) {
-        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+        // loop over the file handle, seperating results where there is a comma
+        while (($data = fgetcsv($handle, ",")) !== FALSE) {
             $num = count($data);
             $row++;
             for ($c=0; $c < $num; $c++) {
-                echo $data[$c] . "<br />\n";
                 $results[] = $data[$c];
                 $keys = array_keys($data);
         }
@@ -95,7 +141,7 @@ foreach($results as $res){
 }
 // var_dump($q);
 if($num > 0){
-    print_r($res);
+    // print_r($res);
     // post array
     $posts_arr = array();
     $posts_arr['data'] = array();
@@ -115,6 +161,7 @@ if($num > 0){
     }    
     
     // turn to json
+    header("Location: ../../../maps.html");
     echo json_encode($posts_arr);
 } else {
     echo json_encode(array("message" => "no posts found"));
@@ -125,6 +172,4 @@ $fp = fopen("results.json", "w");
 fwrite($fp, json_encode($posts_arr));
 fclose($fp);
 // redirect to maps
-header("Location: ../../../maps.html");
 
-// check if any post
