@@ -26,11 +26,25 @@
 
     <script>
       //  initialising the map
+      var p;
       function initMap() {
+        downloadUrl(
+          "http://localhost/trust impact/php/private/api/post/results.json",
+          function (data) {
+            var result = JSON.parse(data.responseText);
+            $.get(
+                "https://maps.googleapis.com/maps/api/geocode/json?address=" +
+                  name +
+                  "&key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno",
+                null,
+                function (data) {
+                  var p = data.results[0].geometry.location;
+          });
+          });
         var data = [];
         var geocoder = new google.maps.Geocoder();
         var map = new google.maps.Map(document.getElementById("map"), {
-          center: new google.maps.LatLng(51.509865, -0.118092),
+          center: p,
           zoom: 12,
         });
         // initialise info window
@@ -102,7 +116,7 @@
 
                   cityCircle = new google.maps.Circle({
                     strokeColor: "#FF0000",
-                    strokeOpacity: 0.8,
+                    strokeOpacity: 2,
                     strokeWeight: 0.3,
                     fillColor: color,
                     fillOpacity: 0.5,
@@ -181,3 +195,4 @@
     ></script>
   </body>
 </html>
+
