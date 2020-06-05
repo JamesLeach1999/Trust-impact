@@ -16,12 +16,9 @@ $filename = $_FILES['postcode']['name'];
 $row = 1;
 // the file extension
 $fileinfo = pathinfo($filename, PATHINFO_EXTENSION);
-// var_dump($_FILES);
 
 // if statements to process the file differently depending on its type
-
 if($fileinfo == "xlsx"){
-$allowed = array("Post code", "postcode", "POSTCODE", "Post Code", "PostCode", "Postcode", "");
 
 if ( $xlsx = SimpleXLSX::parse($file) ) {
     // Produce array keys from the array values of 1st array element
@@ -31,24 +28,22 @@ if ( $xlsx = SimpleXLSX::parse($file) ) {
             $header_values = $r;
 			continue;
         }
+        array_map("trim", $header_values);
+        array_map("strtolower", $header_values);
         
-        // get the individual header titles and compare to array of postcodes to see if theres a match
-        for($i = 0; $i < count($header_values); $i++){
-            array_map("trim", $header_values);
-
-            if(in_array($header_values[$i], $allowed)){
-                $r = implode(",", $r);
-
-                // push the results to the results array
-                array_push($results, $r[$i]);
-            } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[0])){
-                $res = implode(",", $r);
-                // push the results to the results array
-                array_push($results, $res);
-            } else {
-		    continue
-	    }
+        if($header_values[$k] = "postcode"){
+            
+                $filtered = array_values(array_filter($r));
+                $value = array_shift($filtered);
+                
+            array_push($results, $value);
+        } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[$k])){
+            $filtered = array_values(array_filter($r));
+                $value = array_shift($filtered);
+                
+            array_push($results, $value);
         }
+        
 	}
 }
 } else if ($fileinfo == "xls"){
@@ -63,24 +58,24 @@ if ( $xlsx = SimpleXLSX::parse($file) ) {
             $header_values = $r;
 			continue;
         }
-        // get the individual header titles and compare to array of postcodes to see if theres a match
-        for($i = 0; $i < count($header_values); $i++){
-            // remove whitespace
-            array_map("trim", $header_values);
-            if(in_array($header_values[$i], $allowed)){
-                $r = implode(",", $r);
-                // push the results to the results array
-                array_push($results, $r);
-                // use regex to make sure the postcode is valid
-            } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[0])){
-                $res = implode(",", $r);
-                array_push($results, $res);
-            } else {
-		    continue;
-	    }
-        }
+        // get the individual header titles and compare to postcodes to see if theres a match
+        array_map("trim", $header_values);
+        array_map("strtolower", $header_values);
         
+        if($header_values[$k] = "postcode"){
+            
+                $filtered = array_values(array_filter($r));
+                $value = array_shift($filtered);
+                
+            array_push($results, $value);
+        } else if (preg_match("/([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/", $header_values[$k])){
+            $filtered = array_values(array_filter($r));
+                $value = array_shift($filtered);
+                
+            array_push($results, $value);
+        }
     }
+    // var_dump($results);
     
 }
 
@@ -90,9 +85,11 @@ if ( $xlsx = SimpleXLSX::parse($file) ) {
         // loop over the file handle, seperating results where there is a comma
         while (($data = fgetcsv($handle, ",")) !== FALSE) {
             $num = count($data);
+            
             $row++;
             for ($c=0; $c < $num; $c++) {
                 $results[] = $data[$c];
+                array_filter($data);           
                 $keys = array_keys($data);
         }
     }
@@ -107,7 +104,7 @@ if ( $xlsx = SimpleXLSX::parse($file) ) {
     }
 
 } else {
-    echo "Please upload files in csv, txt or xlsx format";
+    echo "Please upload files in csv, txt, xls or xlsx format";
     exit();
 }
 
