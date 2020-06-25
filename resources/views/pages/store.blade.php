@@ -5,7 +5,7 @@
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno&callback=initMap"
+      src="https://maps.googleapis.com/maps/api/js?key=API_KEY&callback=initMap"
       defer
     ></script>
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
@@ -181,6 +181,6 @@
     <div id="map"></div>
   </body>
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6xrYHhT-_CeoktqgAwGjbOCNrmVUkXno&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=API_KEY&callback=initMap">
     </script>
 </html>
