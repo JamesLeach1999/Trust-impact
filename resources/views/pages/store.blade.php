@@ -10,7 +10,7 @@
     ></script>
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 
-{{-- <h1>{{$posts}}</h1> --}}
+
     <style type="text/css">
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -31,7 +31,7 @@
       (function(exports) {
 
         "use strict";
-
+        // initialising map
         function initMap() {
           exports.map = new google.maps.Map(document.getElementById("map"), {
             center: {
@@ -41,24 +41,18 @@
             },
             zoom: 12
           });
-          
-
-          //var x = arr.toString();
-          
-          
-          
-                
-            // });
+         
         }
-
+        // exports map to the current window
         exports.initMap = initMap;
       })((this.window = this.window || {}));
     </script>
+    // only accesses the values needed for the circle and geo location
 @foreach($res as $posts => $t)
-    {{-- <h1>{{$t->imd}}</h1> --}}
-        {{-- <h1>{{$t->postcodes}}</h1> --}}
+    
 
     <script>
+    // accessing the values sent by parseFile through arrow notation
     var a = {!!json_encode($t->postcodes)!!};
     
   
@@ -69,17 +63,14 @@
 
                 null,
                 function (data) {
-    //console.log(data);
-        var j = {!!json_encode($t->postcodes)!!};
+                  // have to access this twice, once for the api call and once for the results
+                  var j = {!!json_encode($t->postcodes)!!};
 
                   var p = data.results[0].geometry.location;
                   var cityCircle;
-                  var q = p;
+                  
 
                   var b = {!!json_encode($t->imd)!!};
-                  
-                  // still in the loop, sets heat map array and lat long for each result
-                  
 
                   var imd = b;
 
@@ -96,23 +87,21 @@
                     decile = 9;
                   } else if (imd > 24000) {
                     color = "#70FF14";
-                                        decile = 8;
+                    decile = 8;
 
                   } else if (imd > 21000) {
                     color = "#A0FF14";
-                                        decile = 7;
+                    decile = 7;
 
                   } else if (imd > 18000) {
                     color = "#D0FF14";
-                                        decile = 6;
+                    decile = 6;
 
                   } else if (imd > 15000) {
-                                        decile = 5;
-
+                    decile = 5;
                     var color = "#FFFD14";
                   } else if (imd > 12000) {
-                                        decile = 4;
-
+                    decile = 4;
                     var color = "#FFCD14";
                   } else if (imd > 9000) {
                     decile = 3;
@@ -129,7 +118,7 @@
                   }
 
                   console.log(color);
-
+                  // initialising and filling out details of the circle
                   var cityCircle = new google.maps.Circle({
                     strokeColor: "#FF0000",
                     strokeOpacity: 2,
@@ -145,7 +134,7 @@
                       "<br><strong>Decile: </strong>" +
                       decile,
                   });
-
+                  // setting a small info window when you hover over the circle
                   var infoWindow = new google.maps.InfoWindow();
 
                   google.maps.event.addListener(
