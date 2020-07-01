@@ -32,12 +32,6 @@ class PagesController extends Controller
     Public function create(){
 
     // $posts = DB::select("SELECT * FROM upload");
-    // $contents = Storage::get($uri);
-
-
-
-        // $ahh = Storage::disk('local')->get();
-
         return view("pages.create");
 
     }
@@ -155,10 +149,10 @@ return $results;
         } else {
             // returns back to upload page with error messaage
             return redirect("/create")->with("error", "Please upload txt, csv, xlsx or xls file");
-
         }
         // turns into string
         $trimmed = implode("','", $results);
+        var_dump($trimmed);
         // the query and storing of results in array
         $post = DB::select("SELECT * FROM postcodes WHERE postcodes IN ('" . $trimmed . "')");
         $r = array();
@@ -173,12 +167,3 @@ return $results;
 }
 
     }
-
-
-    
-
-
-
-
-    
-
